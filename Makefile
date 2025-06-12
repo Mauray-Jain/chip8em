@@ -3,14 +3,14 @@ CFLAGS := -Wall -Wpedantic -Wextra -Wno-unused-parameter
 
 NAME := chip8em
 SOURCE_DIR := src
-HEADER_DIR := include
 BUILD_DIR := build
+MODULES := display sound
 
-HEADERS := $(wildcard $(HEADER_DIR)/*.h)
-SOURCES := $(wildcard $(SOURCE_DIR)/*.c)
-# Substitute src/*.c -> build/obj/*.o
-# notdir removes the src part
-OBJECTS := $(addprefix $(BUILD_DIR)/, $(notdir $(SOURCES:.c=.o)))
+SRCS := $(wildcard $(SOURCE_DIR)/*.c $(foreach fd, $(SOURCE_DIR)/$(MODULES), $(fd)/*.c))
+HEADERS := $(wildcard $(SOURCE_DIR)/*.h $(foreach fd, $(SOURCE_DIR)/$(MODULES), $(fd)/*.h))
+INC_DIRS := $(addprefix -I$(SOURCE_DIR)/, $(MODULES))
+# Substitute src/* -> build/*.o
+OBJECTS := $(addprefix $(BUILD_DIR)/, $(SRCS:src/%.c=%.o))
 
 default: $(NAME)
 
@@ -22,7 +22,7 @@ $(NAME): $(OBJECTS)
 # $< is leftmost prerequisite
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
 	@ mkdir -p $(dir $@)
-	@ $(CC) $(CFLAGS) -c -o $@ $< -Iinclude
+	@ $(CC) $(CFLAGS) -c -o $@ $< $(INC_DIRS)
 
 clean:
 	@ rm -rf $(BUILD_DIR)
